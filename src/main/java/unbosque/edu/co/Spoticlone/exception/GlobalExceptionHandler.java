@@ -44,10 +44,12 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(ex.getMessage()));
     }
 
-    /** Cualquier otro error inesperado. */
+    /** Cualquier otro error inesperado — mensaje sanitizado (sin stack trace ni detalles internos). */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGeneral(Exception ex) {
+        // Sanitized: nunca exponer mensajes internos al cliente
+        String safeMessage = "Error interno del servidor";
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("Error interno: " + ex.getMessage()));
+                .body(ApiResponse.error(safeMessage));
     }
 }

@@ -77,4 +77,29 @@ public class UsuarioRepository {
                 """;
         return jdbc.query(sql, usuarioMapper);
     }
+
+    /** Busca un usuario por email (para login). */
+    public Optional<UsuarioResponse> findByEmail(String email) {
+        String sql = """
+                SELECT id_usuario, nombre, email, foto_perfil, fecha_registro, activo
+                FROM usuario
+                WHERE email = ?
+                """;
+        List<UsuarioResponse> result = jdbc.query(sql, usuarioMapper, email);
+        return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
+    }
+
+    /** Busca email y password_hash para autenticacion (solo uso interno). */
+    public Optional<String> findPasswordHashByEmail(String email) {
+        String sql = "SELECT password_hash FROM usuario WHERE email = ?";
+        List<String> result = jdbc.query(sql, (rs, rowNum) -> rs.getString("password_hash"), email);
+        return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
+    }
+
+    /** Busca el rol de un usuario por email. */
+    public Optional<String> findRolByEmail(String email) {
+        String sql = "SELECT rol FROM usuario WHERE email = ?";
+        List<String> result = jdbc.query(sql, (rs, rowNum) -> rs.getString("rol"), email);
+        return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
+    }
 }

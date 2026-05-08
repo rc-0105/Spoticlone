@@ -26,7 +26,7 @@ public class UsuarioController {
     @PostMapping("/registrar")
     public ResponseEntity<ApiResponse<Map<String, String>>> registrar(
             @Valid @RequestBody RegistrarUsuarioRequest req) {
-        usuarioService.registrar(req.getNombre(), req.getEmail(), req.getPasswordHash());
+        usuarioService.registrar(req.getNombre(), req.getEmail(), req.getPassword());
         Map<String, String> data = Map.of("email", req.getEmail());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.created("Usuario registrado exitosamente", data));
