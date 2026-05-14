@@ -1,11 +1,13 @@
 package unbosque.edu.co.Spoticlone.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import unbosque.edu.co.Spoticlone.dto.response.ApiResponse;
 import unbosque.edu.co.Spoticlone.service.JwtService;
 
 import java.io.IOException;
@@ -25,9 +27,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public static final String USER_EMAIL_ATTRIBUTE = "userEmail";
 
     private final JwtService jwtService;
+    private final ObjectMapper objectMapper;
 
-    public JwtAuthenticationFilter(JwtService jwtService) {
+    public JwtAuthenticationFilter(JwtService jwtService, ObjectMapper objectMapper) {
         this.jwtService = jwtService;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -66,9 +70,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private void sendUnauthorized(HttpServletResponse response, String message) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json");
-        response.getWriter().write(
-                "{\"success\":false,\"message\":\"" + message + "\",\"data\":null}"
-        );
+        response.setContentType("application/json;charset=UTF-8");
+        objectMapper.writeValue(response.getWriter(), ApiResponse.error(message));
     }
 }
