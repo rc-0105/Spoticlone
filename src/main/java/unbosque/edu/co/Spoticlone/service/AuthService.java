@@ -4,6 +4,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import unbosque.edu.co.Spoticlone.dto.response.UsuarioResponse;
 import unbosque.edu.co.Spoticlone.exception.BusinessException;
+import unbosque.edu.co.Spoticlone.repository.pg.LoginData;
 import unbosque.edu.co.Spoticlone.repository.pg.UsuarioRepository;
 
 import java.util.NoSuchElementException;
@@ -33,23 +34,14 @@ public class AuthService {
      * Throws BusinessException on invalid credentials.
      */
     public String login(String email, String plainPassword) {
-        // Fetch stored hash — never exposed outside this method
-        String storedHash = usuarioRepository.findPasswordHashByEmail(email)
+        LoginData data = usuarioRepository.findForLogin(email)
                 .orElseThrow(() -> new BusinessException("Credenciales inválidas", 401));
 
-        if (!passwordEncoder.matches(plainPassword, storedHash)) {
+        if (!passwordEncoder.matches(plainPassword, data.getPasswordHash())) {
             throw new BusinessException("Credenciales inválidas", 401);
         }
 
-        // Fetch user details for JWT claims (id, username, rol)
-        UsuarioResponse user = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException("Credenciales inválidas", 401));
-
-        // Rol comes from DB query — fetched separately since UsuarioResponse doesn't expose it
-        String rol = usuarioRepository.findRolByEmail(email)
-                .orElseThrow(() -> new BusinessException("Usuario sin rol asignado", 401));
-
-        return jwtService.generateToken(user.getIdUsuario(), email, user.getNombre(), rol);
+        return jwtService.generateToken(data.getIdUsuario(), email, data.getNombre(), data.getRol());
     }
 
     /**

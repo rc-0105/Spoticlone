@@ -89,10 +89,19 @@ public class UsuarioRepository {
         return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
     }
 
-    /** Busca email y password_hash para autenticacion (solo uso interno). */
-    public Optional<String> findPasswordHashByEmail(String email) {
-        String sql = "SELECT password_hash FROM usuario WHERE email = ?";
-        List<String> result = jdbc.query(sql, (rs, rowNum) -> rs.getString("password_hash"), email);
+    /** Fetches all auth-relevant fields in a single query for login. */
+    public Optional<LoginData> findForLogin(String email) {
+        String sql = """
+                SELECT id_usuario, nombre, password_hash, rol
+                FROM usuario
+                WHERE email = ?
+                """;
+        List<LoginData> result = jdbc.query(sql, (rs, rowNum) -> new LoginData(
+                rs.getInt("id_usuario"),
+                rs.getString("nombre"),
+                rs.getString("password_hash"),
+                rs.getString("rol")
+        ), email);
         return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
     }
 
