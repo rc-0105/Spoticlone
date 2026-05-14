@@ -1,7 +1,3 @@
--- ============================================================
---  SpotiClone – Script DML (Datos de Prueba)
---  Universidad El Bosque | Bases de Datos 2 | 2026-1
---  Integrantes: Ricardo Carrero, Anthony Vega, Samuel Mesa
 --  IMPORTANTE: Ejecutar DESPUÉS del script DDL
 -- ============================================================
 

@@ -9,5 +9,4 @@ public class SpoticloneApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(SpoticloneApplication.class, args);
 	}
-
 }
