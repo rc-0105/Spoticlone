@@ -92,14 +92,10 @@
 			<artifactId>spring-security-crypto</artifactId>
 		</dependency>
 
-		<!-- Flyway (migraciones de base de datos) -->
+		<!-- Flyway (migraciones de base de datos) — versión 9.22.x gestionada por Spring Boot BOM -->
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
 	</dependencies>
 

@@ -1,36 +1,54 @@
---  IMPORTANTE: Ejecutar DESPUÉS del script DDL
 -- ============================================================
+--  SEED DATA — SpotiClone
+--  IMPORTANTE: Ejecutar DESPUÉS del script DDL (V1)
+-- ============================================================
+
+-- Reset completo para garantizar secuencias en 1 (idempotente en CI/CD)
+TRUNCATE
+    like_cancion,
+    playlist_cancion,
+    auditoria_log,
+    suscripcion,
+    playlist,
+    usuario,
+    artista_genero,
+    cancion,
+    album,
+    artista,
+    genero
+RESTART IDENTITY CASCADE;
+
 
 -- ============================================================
 --  1. GÉNEROS MUSICALES (10 registros)
 -- ============================================================
 INSERT INTO genero (nombre, descripcion) VALUES
-    ('Rock',            'Música rock en todas sus variantes'),
-    ('Pop',             'Música popular contemporánea'),
-    ('Hip-Hop',         'Rap y cultura hip-hop urbana'),
-    ('Electrónica',     'Música electrónica y dance'),
-    ('Jazz',            'Jazz clásico y contemporáneo'),
-    ('Reggaeton',       'Ritmo urbano latino'),
-    ('Clásica',         'Música clásica occidental'),
-    ('R&B',             'Rhythm and Blues'),
-    ('Metal',           'Metal y sus subgéneros'),
-    ('Salsa',           'Música tropical y salsa');
+    ('Rock',        'Música rock en todas sus variantes'),
+    ('Pop',         'Música popular contemporánea'),
+    ('Hip-Hop',     'Rap y cultura hip-hop urbana'),
+    ('Electrónica', 'Música electrónica y dance'),
+    ('Jazz',        'Jazz clásico y contemporáneo'),
+    ('Reggaeton',   'Ritmo urbano latino'),
+    ('Clásica',     'Música clásica occidental'),
+    ('R&B',         'Rhythm and Blues'),
+    ('Metal',       'Metal y sus subgéneros'),
+    ('Salsa',       'Música tropical y salsa');
 
 
 -- ============================================================
 --  2. ARTISTAS (10 registros)
 -- ============================================================
 INSERT INTO artista (nom_artistico, pais, biografia) VALUES
-    ('Los Oscuros',         'Colombia',     'Banda bogotana de rock alternativo formada en 2010.'),
-    ('Valeria Reyes',       'México',       'Cantautora de pop latino con influencias del R&B.'),
-    ('DJ Nexus',            'Argentina',    'Productor y DJ de música electrónica y house.'),
-    ('The Midnight Crew',   'Estados Unidos','Cuarteto de jazz experimental con raíces en el blues.'),
-    ('El Barrio',           'Colombia',     'Grupo de reggaeton y música urbana de Medellín.'),
-    ('Orquesta Dorada',     'Cuba',         'Orquesta de salsa y música tropical con 30 años de trayectoria.'),
-    ('Sombra Negra',        'Chile',        'Banda de metal progresivo con letras en español.'),
-    ('Lena Russo',          'Italia',       'Soprano y compositora de música clásica contemporánea.'),
-    ('FreakBeat',           'Colombia',     'Colectivo de hip-hop colombiano con mensaje social.'),
-    ('Marcos Silva',        'Brasil',       'Guitarrista y compositor de pop acústico y bossa nova.');
+    ('Los Oscuros',       'Colombia',       'Banda bogotana de rock alternativo formada en 2010.'),
+    ('Valeria Reyes',     'México',         'Cantautora de pop latino con influencias del R&B.'),
+    ('DJ Nexus',          'Argentina',      'Productor y DJ de música electrónica y house.'),
+    ('The Midnight Crew', 'Estados Unidos', 'Cuarteto de jazz experimental con raíces en el blues.'),
+    ('El Barrio',         'Colombia',       'Grupo de reggaeton y música urbana de Medellín.'),
+    ('Orquesta Dorada',   'Cuba',           'Orquesta de salsa y música tropical con 30 años de trayectoria.'),
+    ('Sombra Negra',      'Chile',          'Banda de metal progresivo con letras en español.'),
+    ('Lena Russo',        'Italia',         'Soprano y compositora de música clásica contemporánea.'),
+    ('FreakBeat',         'Colombia',       'Colectivo de hip-hop colombiano con mensaje social.'),
+    ('Marcos Silva',      'Brasil',         'Guitarrista y compositor de pop acústico y bossa nova.');
 
 
 -- ============================================================
@@ -125,86 +143,126 @@ INSERT INTO artista_genero (id_artista, id_genero) VALUES
 
 
 -- ============================================================
---  6. USUARIOS (10 registros, via stored procedure)
---     El SP crea automáticamente la suscripción freemium
+--  6. USUARIOS (10 registros) + SUSCRIPCIÓN FREEMIUM
+--     Equivale a: CALL sp_registrar_usuario(...)
+--     El SP hacía: INSERT usuario → INSERT suscripcion freemium
+--     Se usan IDs explícitos porque TRUNCATE RESTART IDENTITY
+--     garantiza que los usuarios obtengan IDs 1-10 en orden,
+--     pero el trigger trg_log_nuevo_usuario inserta en auditoria_log
+--     (también SERIAL), lo que haría que lastval() devuelva el ID
+--     de auditoria_log en lugar del de usuario.
 -- ============================================================
-CALL sp_registrar_usuario('Ricardo Carrero',   'ricardo@spoticlone.com',   '$2b$12$abc123hashricardo');
-CALL sp_registrar_usuario('Anthony Vega',      'anthony@spoticlone.com',   '$2b$12$abc123hashanthony');
-CALL sp_registrar_usuario('Samuel Mesa',       'samuel@spoticlone.com',    '$2b$12$abc123hashsamuel');
-CALL sp_registrar_usuario('Laura Martínez',    'laura@spoticlone.com',     '$2b$12$abc123hashlauramt');
-CALL sp_registrar_usuario('Andrés Torres',     'andres@spoticlone.com',    '$2b$12$abc123hashandrest');
-CALL sp_registrar_usuario('Sofía Gómez',       'sofia@spoticlone.com',     '$2b$12$abc123hashsofiagm');
-CALL sp_registrar_usuario('Camila Ruiz',       'camila@spoticlone.com',    '$2b$12$abc123hashcamilar');
-CALL sp_registrar_usuario('Diego Herrera',     'diego@spoticlone.com',     '$2b$12$abc123hashdiegohm');
-CALL sp_registrar_usuario('Valentina Cruz',    'valentina@spoticlone.com', '$2b$12$abc123hashvalenti');
-CALL sp_registrar_usuario('Admin SpotiClone',  'admin@spoticlone.com',     '$2b$12$abc123hashadminsc');
+INSERT INTO usuario (nombre, email, password_hash) VALUES
+    ('Ricardo Carrero',  'ricardo@spoticlone.com',   '$2b$12$abc123hashricardo'),
+    ('Anthony Vega',     'anthony@spoticlone.com',   '$2b$12$abc123hashanthony'),
+    ('Samuel Mesa',      'samuel@spoticlone.com',    '$2b$12$abc123hashsamuel'),
+    ('Laura Martínez',   'laura@spoticlone.com',     '$2b$12$abc123hashlauramt'),
+    ('Andrés Torres',    'andres@spoticlone.com',    '$2b$12$abc123hashandrest'),
+    ('Sofía Gómez',      'sofia@spoticlone.com',     '$2b$12$abc123hashsofiagm'),
+    ('Camila Ruiz',      'camila@spoticlone.com',    '$2b$12$abc123hashcamilar'),
+    ('Diego Herrera',    'diego@spoticlone.com',     '$2b$12$abc123hashdiegohm'),
+    ('Valentina Cruz',   'valentina@spoticlone.com', '$2b$12$abc123hashvalenti'),
+    ('Admin SpotiClone', 'admin@spoticlone.com',     '$2b$12$abc123hashadminsc');
+
+INSERT INTO suscripcion (id_usuario, tipo, precio) VALUES
+    (1,  'freemium', 0.00),
+    (2,  'freemium', 0.00),
+    (3,  'freemium', 0.00),
+    (4,  'freemium', 0.00),
+    (5,  'freemium', 0.00),
+    (6,  'freemium', 0.00),
+    (7,  'freemium', 0.00),
+    (8,  'freemium', 0.00),
+    (9,  'freemium', 0.00),
+    (10, 'freemium', 0.00);
 
 
 -- ============================================================
 --  7. SUSCRIPCIONES PREMIUM (usuarios 1, 2, 3 y 4)
---     Cambia de freemium a premium via stored procedure
+--     Equivale a: CALL sp_cambiar_suscripcion(id, 'premium')
+--     El SP hacía: UPDATE suscripcion + INSERT auditoria_log
 -- ============================================================
-CALL sp_cambiar_suscripcion(1, 'premium');
-CALL sp_cambiar_suscripcion(2, 'premium');
-CALL sp_cambiar_suscripcion(3, 'premium');
-CALL sp_cambiar_suscripcion(4, 'premium');
+UPDATE suscripcion
+SET    tipo         = 'premium',
+       fecha_inicio = CURRENT_DATE,
+       fecha_fin    = CURRENT_DATE + INTERVAL '30 days',
+       precio       = 9.99,
+       activa       = TRUE
+WHERE  id_usuario IN (1, 2, 3, 4);
 
-
--- ============================================================
---  8. PLAYLISTS (via stored procedure)
--- ============================================================
-CALL sp_crear_playlist(1, 'Mis Favoritas de Rock',  'Lo mejor del rock en español',     TRUE);
-CALL sp_crear_playlist(1, 'Para Estudiar',           'Música instrumental y electrónica', FALSE);
-CALL sp_crear_playlist(2, 'Vibes Urbanos',           'Reggaeton y Hip-Hop del momento',   TRUE);
-CALL sp_crear_playlist(3, 'Jazz & Soul',             'Sesiones de jazz y R&B',            TRUE);
-CALL sp_crear_playlist(4, 'Mix Latino',              'Pop y salsa latina',                TRUE);
-CALL sp_crear_playlist(5, 'Workout',                 'Energía para el gym',               TRUE);
-CALL sp_crear_playlist(6, 'Noche de Viernes',        'Para la noche del fin de semana',   FALSE);
-CALL sp_crear_playlist(7, 'Acústica',                'Solo guitarra y voz',               TRUE);
+INSERT INTO auditoria_log (tabla, operacion, id_registro, descripcion) VALUES
+    ('suscripcion', 'UPDATE', 1, 'Cambio de suscripción: freemium → premium'),
+    ('suscripcion', 'UPDATE', 2, 'Cambio de suscripción: freemium → premium'),
+    ('suscripcion', 'UPDATE', 3, 'Cambio de suscripción: freemium → premium'),
+    ('suscripcion', 'UPDATE', 4, 'Cambio de suscripción: freemium → premium');
 
 
 -- ============================================================
---  9. CANCIONES EN PLAYLISTS (via stored procedure)
---     El trigger actualiza total_canciones automáticamente
+--  8. PLAYLISTS (8 registros)
+--     Equivale a: CALL sp_crear_playlist(...)
+--     El SP hacía: INSERT playlist
+--     Nota: trg_log_playlist se crea en V3, no existe aún aquí.
 -- ============================================================
+INSERT INTO playlist (id_usuario, nombre, descripcion, es_publica) VALUES
+    (1, 'Mis Favoritas de Rock', 'Lo mejor del rock en español',     TRUE),
+    (1, 'Para Estudiar',          'Música instrumental y electrónica', FALSE),
+    (2, 'Vibes Urbanos',          'Reggaeton y Hip-Hop del momento',   TRUE),
+    (3, 'Jazz & Soul',            'Sesiones de jazz y R&B',            TRUE),
+    (4, 'Mix Latino',             'Pop y salsa latina',                TRUE),
+    (5, 'Workout',                'Energía para el gym',               TRUE),
+    (6, 'Noche de Viernes',       'Para la noche del fin de semana',   FALSE),
+    (7, 'Acústica',               'Solo guitarra y voz',               TRUE);
 
--- Playlist 1: Mis Favoritas de Rock (usuario 1)
-CALL sp_agregar_cancion_playlist(1, 1);   -- Oscuridad
-CALL sp_agregar_cancion_playlist(1, 2);   -- Sin Retorno
-CALL sp_agregar_cancion_playlist(1, 3);   -- El Último Tren
-CALL sp_agregar_cancion_playlist(1, 5);   -- Caos
-CALL sp_agregar_cancion_playlist(1, 23);  -- Fractura
 
--- Playlist 2: Para Estudiar (usuario 1)
-CALL sp_agregar_cancion_playlist(2, 12);  -- Pulso Alpha
-CALL sp_agregar_cancion_playlist(2, 13);  -- Drifting
-CALL sp_agregar_cancion_playlist(2, 14);  -- Neon Rain
-CALL sp_agregar_cancion_playlist(2, 15);  -- Blue Monday
-CALL sp_agregar_cancion_playlist(2, 30);  -- Drop Zone
+-- ============================================================
+--  9. CANCIONES EN PLAYLISTS
+--     Equivale a: CALL sp_agregar_cancion_playlist(...)
+--     El SP hacía: calcular posicion = MAX+1, INSERT playlist_cancion
+--     trg_contador_playlist (V1) actualiza total_canciones automáticamente.
+-- ============================================================
+-- Playlist 1: Mis Favoritas de Rock
+INSERT INTO playlist_cancion (id_playlist, id_cancion, posicion) VALUES
+    (1, 1,  1),
+    (1, 2,  2),
+    (1, 3,  3),
+    (1, 5,  4),
+    (1, 23, 5);
 
--- Playlist 3: Vibes Urbanos (usuario 2)
-CALL sp_agregar_cancion_playlist(3, 18);  -- Calor de Barrio
-CALL sp_agregar_cancion_playlist(3, 19);  -- La Calle Llama
-CALL sp_agregar_cancion_playlist(3, 25);  -- Concreto
-CALL sp_agregar_cancion_playlist(3, 26);  -- Barrio Libre
+-- Playlist 2: Para Estudiar
+INSERT INTO playlist_cancion (id_playlist, id_cancion, posicion) VALUES
+    (2, 12, 1),
+    (2, 13, 2),
+    (2, 14, 3),
+    (2, 15, 4),
+    (2, 30, 5);
 
--- Playlist 4: Jazz & Soul (usuario 3)
-CALL sp_agregar_cancion_playlist(4, 15);  -- Blue Monday
-CALL sp_agregar_cancion_playlist(4, 16);  -- Sax at Midnight
-CALL sp_agregar_cancion_playlist(4, 17);  -- The Last Note
-CALL sp_agregar_cancion_playlist(4, 9);   -- Feeling Good
+-- Playlist 3: Vibes Urbanos
+INSERT INTO playlist_cancion (id_playlist, id_cancion, posicion) VALUES
+    (3, 18, 1),
+    (3, 19, 2),
+    (3, 25, 3),
+    (3, 26, 4);
 
--- Playlist 5: Mix Latino (usuario 4)
-CALL sp_agregar_cancion_playlist(5, 7);   -- Luz de Día
-CALL sp_agregar_cancion_playlist(5, 11);  -- Despertar
-CALL sp_agregar_cancion_playlist(5, 21);  -- Sabrosura
-CALL sp_agregar_cancion_playlist(5, 22);  -- Paso a Paso
+-- Playlist 4: Jazz & Soul
+INSERT INTO playlist_cancion (id_playlist, id_cancion, posicion) VALUES
+    (4, 15, 1),
+    (4, 16, 2),
+    (4, 17, 3),
+    (4, 9,  4);
 
--- Playlist 6: Workout (usuario 5)
-CALL sp_agregar_cancion_playlist(6, 12);  -- Pulso Alpha
-CALL sp_agregar_cancion_playlist(6, 18);  -- Calor de Barrio
-CALL sp_agregar_cancion_playlist(6, 20);  -- Noche de Viernes
-CALL sp_agregar_cancion_playlist(6, 30);  -- Drop Zone
+-- Playlist 5: Mix Latino
+INSERT INTO playlist_cancion (id_playlist, id_cancion, posicion) VALUES
+    (5, 7,  1),
+    (5, 11, 2),
+    (5, 21, 3),
+    (5, 22, 4);
+
+-- Playlist 6: Workout
+INSERT INTO playlist_cancion (id_playlist, id_cancion, posicion) VALUES
+    (6, 12, 1),
+    (6, 18, 2),
+    (6, 20, 3),
+    (6, 30, 4);
 
 
 -- ============================================================
@@ -226,50 +284,19 @@ INSERT INTO like_cancion (id_usuario, id_cancion) VALUES
 -- ============================================================
 --  11. VERIFICACIONES POST-INSERCIÓN
 -- ============================================================
-
--- Contar registros por tabla
-SELECT 'genero'           AS tabla, COUNT(*) AS registros FROM genero
-UNION ALL
-SELECT 'artista',                   COUNT(*)               FROM artista
-UNION ALL
-SELECT 'album',                     COUNT(*)               FROM album
-UNION ALL
-SELECT 'cancion',                   COUNT(*)               FROM cancion
-UNION ALL
-SELECT 'artista_genero',            COUNT(*)               FROM artista_genero
-UNION ALL
-SELECT 'usuario',                   COUNT(*)               FROM usuario
-UNION ALL
-SELECT 'suscripcion',               COUNT(*)               FROM suscripcion
-UNION ALL
-SELECT 'playlist',                  COUNT(*)               FROM playlist
-UNION ALL
-SELECT 'playlist_cancion',          COUNT(*)               FROM playlist_cancion
-UNION ALL
-SELECT 'like_cancion',              COUNT(*)               FROM like_cancion
-UNION ALL
-SELECT 'auditoria_log',             COUNT(*)               FROM auditoria_log
+SELECT 'genero'        AS tabla, COUNT(*) AS registros FROM genero
+UNION ALL SELECT 'artista',      COUNT(*) FROM artista
+UNION ALL SELECT 'album',        COUNT(*) FROM album
+UNION ALL SELECT 'cancion',      COUNT(*) FROM cancion
+UNION ALL SELECT 'usuario',      COUNT(*) FROM usuario
+UNION ALL SELECT 'suscripcion',  COUNT(*) FROM suscripcion
+UNION ALL SELECT 'playlist',     COUNT(*) FROM playlist
+UNION ALL SELECT 'like_cancion', COUNT(*) FROM like_cancion
 ORDER BY tabla;
 
--- Verificar que el trigger actualizó correctamente los contadores
-SELECT p.id_playlist, p.nombre, p.total_canciones,
-       COUNT(pc.id_cancion) AS canciones_reales
-FROM   playlist p
-LEFT JOIN playlist_cancion pc ON pc.id_playlist = p.id_playlist
-GROUP  BY p.id_playlist, p.nombre, p.total_canciones
-ORDER  BY p.id_playlist;
-
--- Verificar suscripciones premium
-SELECT u.nombre, s.tipo, s.fecha_inicio, s.fecha_fin, s.precio
-FROM   suscripcion s
-JOIN   usuario u ON u.id_usuario = s.id_usuario
-ORDER  BY s.tipo DESC, u.nombre;
-
--- Probar funciones
 SELECT fn_duracion_total_playlist(1) AS duracion_playlist1_seg;
 SELECT fn_canciones_por_artista(1)   AS canciones_los_oscuros;
 SELECT fn_tiene_suscripcion_activa(1) AS usuario1_premium;
-SELECT fn_tiene_suscripcion_activa(5) AS usuario5_premium;
 
 -- ============================================================
 --  FIN DEL SCRIPT DML
