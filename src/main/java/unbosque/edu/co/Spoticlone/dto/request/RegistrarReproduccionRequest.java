@@ -8,9 +8,6 @@ import jakarta.validation.constraints.Pattern;
 
 public class RegistrarReproduccionRequest {
 
-    @NotNull(message = "El id de usuario es obligatorio")
-    private Integer idUsuario;
-
     @NotNull(message = "El id de canción es obligatorio")
     private Integer idCancion;
 
@@ -47,7 +44,6 @@ public class RegistrarReproduccionRequest {
     @NotNull(message = "El contexto es obligatorio")
     private ContextoRequest contexto;
 
-    public Integer getIdUsuario() { return idUsuario; }
     public Integer getIdCancion() { return idCancion; }
     public Integer getIdArtista() { return idArtista; }
     public Integer getIdGenero() { return idGenero; }
@@ -60,7 +56,6 @@ public class RegistrarReproduccionRequest {
     public String getDispositivo() { return dispositivo; }
     public ContextoRequest getContexto() { return contexto; }
 
-    public void setIdUsuario(Integer idUsuario) { this.idUsuario = idUsuario; }
     public void setIdCancion(Integer idCancion) { this.idCancion = idCancion; }
     public void setIdArtista(Integer idArtista) { this.idArtista = idArtista; }
     public void setIdGenero(Integer idGenero) { this.idGenero = idGenero; }

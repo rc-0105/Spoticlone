@@ -18,8 +18,8 @@ public class ReproduccionService {
         this.reproduccionRepository = reproduccionRepository;
     }
 
-    public void registrar(RegistrarReproduccionRequest req) {
-        reproduccionRepository.registrar(req);
+    public void registrar(int idUsuario, RegistrarReproduccionRequest req) {
+        reproduccionRepository.registrar(idUsuario, req);
     }
 
     public List<ReproduccionResponse> historialByUsuario(int idUsuario) {

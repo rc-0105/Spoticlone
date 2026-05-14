@@ -29,4 +29,15 @@ public class UsuarioService {
     public List<UsuarioResponse> findAll() {
         return usuarioRepository.findAll();
     }
+
+    public int findIdByEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+                .map(UsuarioResponse::getIdUsuario)
+                .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado"));
+    }
+
+    public String findRolByEmail(String email) {
+        return usuarioRepository.findRolByEmail(email)
+                .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado"));
+    }
 }

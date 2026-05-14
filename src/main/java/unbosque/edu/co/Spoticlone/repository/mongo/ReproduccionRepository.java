@@ -37,11 +37,11 @@ public class ReproduccionRepository {
     // ─── Insert ───────────────────────────────────────────────────────────────
 
     /** Registra una reproducción en MongoDB. */
-    public void registrar(RegistrarReproduccionRequest req) {
+    public void registrar(int idUsuario, RegistrarReproduccionRequest req) {
         Document contexto = new Document("tipo", req.getContexto().getTipo())
                 .append("id_referencia", req.getContexto().getIdReferencia());
 
-        Document doc = new Document("id_usuario", req.getIdUsuario())
+        Document doc = new Document("id_usuario", idUsuario)
                 .append("id_cancion", req.getIdCancion())
                 .append("id_artista", req.getIdArtista())
                 .append("id_genero", req.getIdGenero())

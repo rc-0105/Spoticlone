@@ -30,9 +30,12 @@ public class GlobalExceptionHandler {
     /** Excepciones de negocio (stored procedures, duplicados, etc.). */
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusiness(BusinessException ex) {
-        HttpStatus status = ex.getStatusCode() == 409
-                ? HttpStatus.CONFLICT
-                : HttpStatus.BAD_REQUEST;
+        HttpStatus status = switch (ex.getStatusCode()) {
+            case 409 -> HttpStatus.CONFLICT;
+            case 403 -> HttpStatus.FORBIDDEN;
+            case 401 -> HttpStatus.UNAUTHORIZED;
+            default -> HttpStatus.BAD_REQUEST;
+        };
         return ResponseEntity.status(status)
                 .body(ApiResponse.error(ex.getMessage()));
     }

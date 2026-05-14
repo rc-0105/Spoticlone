@@ -1,5 +1,6 @@
 package unbosque.edu.co.Spoticlone.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,7 @@ import unbosque.edu.co.Spoticlone.dto.response.ApiResponse;
 import unbosque.edu.co.Spoticlone.dto.response.PlaylistDetalleResponse;
 import unbosque.edu.co.Spoticlone.dto.response.PlaylistResponse;
 import unbosque.edu.co.Spoticlone.service.PlaylistService;
+import unbosque.edu.co.Spoticlone.service.UsuarioService;
 
 import java.util.List;
 
@@ -18,17 +20,22 @@ import java.util.List;
 public class PlaylistController {
 
     private final PlaylistService playlistService;
+    private final UsuarioService usuarioService;
 
-    public PlaylistController(PlaylistService playlistService) {
+    public PlaylistController(PlaylistService playlistService, UsuarioService usuarioService) {
         this.playlistService = playlistService;
+        this.usuarioService = usuarioService;
     }
 
     /** POST /api/playlists */
     @PostMapping
     public ResponseEntity<ApiResponse<Void>> crearPlaylist(
+            HttpServletRequest request,
             @Valid @RequestBody CrearPlaylistRequest req) {
+        String email = (String) request.getAttribute("userEmail");
+        int idUsuario = usuarioService.findIdByEmail(email);
         playlistService.crearPlaylist(
-                req.getIdUsuario(),
+                idUsuario,
                 req.getNombre(),
                 req.getDescripcion(),
                 Boolean.TRUE.equals(req.getEsPublica())
