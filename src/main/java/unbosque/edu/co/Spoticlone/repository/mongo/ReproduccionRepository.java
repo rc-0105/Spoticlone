@@ -9,6 +9,7 @@ import org.bson.conversions.Bson;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import unbosque.edu.co.Spoticlone.dto.request.RegistrarReproduccionRequest;
+import unbosque.edu.co.Spoticlone.dto.response.CancionResponse;
 import unbosque.edu.co.Spoticlone.dto.response.GeneroFavoritoResponse;
 import unbosque.edu.co.Spoticlone.dto.response.ReproduccionResponse;
 import unbosque.edu.co.Spoticlone.dto.response.TopCancionResponse;
@@ -36,18 +37,18 @@ public class ReproduccionRepository {
 
     // ─── Insert ───────────────────────────────────────────────────────────────
 
-    /** Registra una reproducción en MongoDB. */
-    public void registrar(int idUsuario, RegistrarReproduccionRequest req) {
+    /** Registra una reproducción en MongoDB. Metadatos de canción vienen del servidor (PostgreSQL). */
+    public void registrar(int idUsuario, RegistrarReproduccionRequest req, CancionResponse cancion) {
         Document contexto = new Document("tipo", req.getContexto().getTipo())
                 .append("id_referencia", req.getContexto().getIdReferencia());
 
         Document doc = new Document("id_usuario", idUsuario)
-                .append("id_cancion", req.getIdCancion())
-                .append("id_artista", req.getIdArtista())
-                .append("id_genero", req.getIdGenero())
-                .append("titulo_cancion", req.getTituloCancion())
-                .append("nom_artista", req.getNomArtista())
-                .append("nombre_genero", req.getNombreGenero())
+                .append("id_cancion", cancion.getIdCancion())
+                .append("id_artista", cancion.getIdArtista())
+                .append("id_genero", cancion.getIdGenero())
+                .append("titulo_cancion", cancion.getTitulo())
+                .append("nom_artista", cancion.getNomArtista())
+                .append("nombre_genero", cancion.getNombreGenero())
                 .append("timestamp", new Date())
                 .append("duracion_total_seg", req.getDuracionTotalSeg())
                 .append("duracion_escuchada_seg", req.getDuracionEscuchadaSeg())

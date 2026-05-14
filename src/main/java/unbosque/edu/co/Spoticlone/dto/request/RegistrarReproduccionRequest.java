@@ -11,21 +11,6 @@ public class RegistrarReproduccionRequest {
     @NotNull(message = "El id de canción es obligatorio")
     private Integer idCancion;
 
-    @NotNull(message = "El id de artista es obligatorio")
-    private Integer idArtista;
-
-    @NotNull(message = "El id de género es obligatorio")
-    private Integer idGenero;
-
-    @NotBlank(message = "El título de la canción es obligatorio")
-    private String tituloCancion;
-
-    @NotBlank(message = "El nombre del artista es obligatorio")
-    private String nomArtista;
-
-    @NotBlank(message = "El nombre del género es obligatorio")
-    private String nombreGenero;
-
     @NotNull(message = "La duración total es obligatoria")
     @Min(value = 1, message = "La duración total debe ser mayor a 0")
     private Integer duracionTotalSeg;
@@ -45,11 +30,6 @@ public class RegistrarReproduccionRequest {
     private ContextoRequest contexto;
 
     public Integer getIdCancion() { return idCancion; }
-    public Integer getIdArtista() { return idArtista; }
-    public Integer getIdGenero() { return idGenero; }
-    public String getTituloCancion() { return tituloCancion; }
-    public String getNomArtista() { return nomArtista; }
-    public String getNombreGenero() { return nombreGenero; }
     public Integer getDuracionTotalSeg() { return duracionTotalSeg; }
     public Integer getDuracionEscuchadaSeg() { return duracionEscuchadaSeg; }
     public boolean isCompletada() { return completada; }
@@ -57,11 +37,6 @@ public class RegistrarReproduccionRequest {
     public ContextoRequest getContexto() { return contexto; }
 
     public void setIdCancion(Integer idCancion) { this.idCancion = idCancion; }
-    public void setIdArtista(Integer idArtista) { this.idArtista = idArtista; }
-    public void setIdGenero(Integer idGenero) { this.idGenero = idGenero; }
-    public void setTituloCancion(String tituloCancion) { this.tituloCancion = tituloCancion; }
-    public void setNomArtista(String nomArtista) { this.nomArtista = nomArtista; }
-    public void setNombreGenero(String nombreGenero) { this.nombreGenero = nombreGenero; }
     public void setDuracionTotalSeg(Integer duracionTotalSeg) { this.duracionTotalSeg = duracionTotalSeg; }
     public void setDuracionEscuchadaSeg(Integer duracionEscuchadaSeg) { this.duracionEscuchadaSeg = duracionEscuchadaSeg; }
     public void setCompletada(boolean completada) { this.completada = completada; }

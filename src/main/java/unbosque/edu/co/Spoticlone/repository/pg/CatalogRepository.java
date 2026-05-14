@@ -111,6 +111,13 @@ public class CatalogRepository {
         return jdbc.query(sql, cancionMapper, idAlbum);
     }
 
+    /** Detalle de una canción por ID — usado para enriquecer reproducciones en Mongo. */
+    public Optional<CancionResponse> findCancionById(int idCancion) {
+        String sql = BASE_CANCION_SQL + " WHERE c.id_cancion = ?";
+        List<CancionResponse> result = jdbc.query(sql, cancionMapper, idCancion);
+        return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
+    }
+
     // ─── Artistas ─────────────────────────────────────────────────────────────
 
     /** Lista todos los artistas con total de canciones (via función de BD). */
