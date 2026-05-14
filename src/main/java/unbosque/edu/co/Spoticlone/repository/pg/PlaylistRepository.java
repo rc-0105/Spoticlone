@@ -57,13 +57,15 @@ public class PlaylistRepository {
     /** Crea una playlist via sp_crear_playlist. */
     public void crearPlaylist(int idUsuario, String nombre, String descripcion, boolean esPublica) {
         String sql = "CALL sp_crear_playlist(?, ?, ?, ?)";
-        try (Connection conn = dataSource.getConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
-            cs.setInt(1, idUsuario);
-            cs.setString(2, nombre);
-            cs.setString(3, descripcion);
-            cs.setBoolean(4, esPublica);
-            cs.execute();
+        try (Connection conn = dataSource.getConnection()) {
+            conn.setAutoCommit(true);
+            try (CallableStatement cs = conn.prepareCall(sql)) {
+                cs.setInt(1, idUsuario);
+                cs.setString(2, nombre);
+                cs.setString(3, descripcion);
+                cs.setBoolean(4, esPublica);
+                cs.execute();
+            }
         } catch (SQLException e) {
             String msg = e.getMessage() != null ? e.getMessage() : "Error al crear playlist";
             throw new BusinessException(msg, 400);
@@ -73,11 +75,13 @@ public class PlaylistRepository {
     /** Agrega una canción a una playlist via sp_agregar_cancion_playlist. */
     public void agregarCancion(int idPlaylist, int idCancion) {
         String sql = "CALL sp_agregar_cancion_playlist(?, ?)";
-        try (Connection conn = dataSource.getConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
-            cs.setInt(1, idPlaylist);
-            cs.setInt(2, idCancion);
-            cs.execute();
+        try (Connection conn = dataSource.getConnection()) {
+            conn.setAutoCommit(true);
+            try (CallableStatement cs = conn.prepareCall(sql)) {
+                cs.setInt(1, idPlaylist);
+                cs.setInt(2, idCancion);
+                cs.execute();
+            }
         } catch (SQLException e) {
             String msg = e.getMessage() != null ? e.getMessage() : "Error al agregar canción";
             if ("23505".equals(e.getSQLState()) || (msg.toLowerCase().contains("ya")

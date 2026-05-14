@@ -27,11 +27,13 @@ public class SuscripcionRepository {
      */
     public void cambiarSuscripcion(int idUsuario, String nuevoTipo) {
         String sql = "CALL sp_cambiar_suscripcion(?, ?)";
-        try (Connection conn = dataSource.getConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
-            cs.setInt(1, idUsuario);
-            cs.setString(2, nuevoTipo);
-            cs.execute();
+        try (Connection conn = dataSource.getConnection()) {
+            conn.setAutoCommit(true);
+            try (CallableStatement cs = conn.prepareCall(sql)) {
+                cs.setInt(1, idUsuario);
+                cs.setString(2, nuevoTipo);
+                cs.execute();
+            }
         } catch (SQLException e) {
             String msg = e.getMessage() != null ? e.getMessage() : "Error al cambiar suscripción";
             throw new BusinessException(msg, 400);

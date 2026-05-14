@@ -41,15 +41,18 @@ public class UsuarioRepository {
     /** Registra un nuevo usuario via stored procedure sp_registrar_usuario. */
     public void registrar(String nombre, String email, String passwordHash) {
         String sql = "CALL sp_registrar_usuario(?, ?, ?)";
-        try (Connection conn = dataSource.getConnection();
-             CallableStatement cs = conn.prepareCall(sql)) {
-            cs.setString(1, nombre);
-            cs.setString(2, email);
-            cs.setString(3, passwordHash);
-            cs.execute();
+        try (Connection conn = dataSource.getConnection()) {
+            conn.setAutoCommit(true);
+            try (CallableStatement cs = conn.prepareCall(sql)) {
+                cs.setString(1, nombre);
+                cs.setString(2, email);
+                cs.setString(3, passwordHash);
+                cs.execute();
+            }
         } catch (SQLException e) {
             String msg = e.getMessage() != null ? e.getMessage() : "Error al registrar usuario";
             if ("23505".equals(e.getSQLState()) || msg.toLowerCase().contains("ya exist")
+                    || msg.toLowerCase().contains("ya est")
                     || msg.toLowerCase().contains("already") || msg.toLowerCase().contains("duplicado")) {
                 throw new BusinessException(msg, 409);
             }
