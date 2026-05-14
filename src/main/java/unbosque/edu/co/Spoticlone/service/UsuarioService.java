@@ -16,10 +16,6 @@ public class UsuarioService {
         this.usuarioRepository = usuarioRepository;
     }
 
-    public void registrar(String nombre, String email, String passwordHash) {
-        usuarioRepository.registrar(nombre, email, passwordHash);
-    }
-
     public UsuarioResponse findById(int idUsuario) {
         return usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new NoSuchElementException(
