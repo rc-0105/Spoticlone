@@ -2,12 +2,15 @@ package unbosque.edu.co.Spoticlone.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
 /**
  * Unit tests for JwtService.
  * Tests token generation, validation, and email extraction.
+ * JdbcTemplate is mocked — isUserActive() is not exercised here.
  */
 class JwtServiceTest {
 
@@ -19,7 +22,7 @@ class JwtServiceTest {
 
     @BeforeEach
     void setUp() {
-        jwtService = new JwtService(TEST_SECRET, TEST_EXPIRATION);
+        jwtService = new JwtService(TEST_SECRET, TEST_EXPIRATION, mock(JdbcTemplate.class));
     }
 
     @Test
@@ -72,7 +75,8 @@ class JwtServiceTest {
     void differentSecrets_shouldProduceDifferentValidation() {
         JwtService other = new JwtService(
                 "DiferenteSecretKeyQueTieneAlMenos256BitsDeLargo",
-                TEST_EXPIRATION);
+                TEST_EXPIRATION,
+                mock(JdbcTemplate.class));
         String token = jwtService.generateToken(1, "user@test.com", "testuser", "user");
         assertTrue(jwtService.validateToken(token));
         assertFalse(other.validateToken(token));

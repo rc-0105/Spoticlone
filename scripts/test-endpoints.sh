@@ -40,7 +40,7 @@ check() {
 
   local args=(-s -o /dev/null -w "%{http_code}" -X "$method")
   [[ -n "$body" ]] && args+=(-H "Content-Type: application/json" -d "$body")
-  for h in "${headers[@]}"; do args+=($h); done
+  args+=("${headers[@]}")
 
   local status
   status=$(curl "${args[@]}" "$url")
@@ -67,7 +67,7 @@ fetch() {
     fi
   done
   [[ -n "$body" ]] && args+=(-H "Content-Type: application/json" -d "$body")
-  for h in "${headers[@]}"; do args+=($h); done
+  args+=("${headers[@]}")
   curl "${args[@]}" "$url"
 }
 
@@ -112,8 +112,6 @@ TEST_EMAIL="test_$(date +%s)@spoticlone.com"
 TEST_PASS="TestPass123!"
 
 # Registro
-REG=$(fetch POST "$BASE/api/auth/register" \
-  -d "{\"nombre\":\"Test User\",\"email\":\"$TEST_EMAIL\",\"password\":\"$TEST_PASS\"}")
 REG_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
   -H "Content-Type: application/json" \
   -d "{\"nombre\":\"Test User\",\"email\":\"$TEST_EMAIL\",\"password\":\"$TEST_PASS\"}" \
@@ -180,6 +178,14 @@ check "GET /api/catalog/albumes/1/canciones → 200" \
   GET "$BASE/api/catalog/albumes/1/canciones" \
   -H "Authorization: Bearer $TOKEN" 200
 
+check "GET /api/catalog/albumes/1 (detalle con canciones) → 200" \
+  GET "$BASE/api/catalog/albumes/1" \
+  -H "Authorization: Bearer $TOKEN" 200
+
+check "GET /api/catalog/albumes/99999 (no existe) → 404" \
+  GET "$BASE/api/catalog/albumes/99999" \
+  -H "Authorization: Bearer $TOKEN" 404
+
 check "GET /api/catalog/canciones → 200" \
   GET "$BASE/api/catalog/canciones" \
   -H "Authorization: Bearer $TOKEN" 200
@@ -196,12 +202,14 @@ check "GET /api/catalog/canciones?artista=Valeria → 200" \
 section "4. Usuarios"
 # ─────────────────────────────────────────────────────────────
 
-# Obtener el ID del usuario de test
-ME=$(fetch GET "$BASE/api/catalog/generos" -H "Authorization: Bearer $TOKEN")
-# El ID lo inferimos del token — registramos y buscamos por email
-# Como no hay GET /me, usamos GET /api/usuarios buscando nuestro user
-# Workaround: hacemos login de nuevo para ver si podemos inferir el ID
-# (usamos el primer usuario del seed que sí sabemos que existe con ID 1)
+# Obtener el ID del usuario autenticado desde GET /me
+ME_RESP=$(fetch GET "$BASE/api/usuarios/me" -H "Authorization: Bearer $TOKEN")
+MY_USER_ID_FROM_ME=$(json_get_num "$ME_RESP" "idUsuario")
+info "Perfil propio: id=$MY_USER_ID_FROM_ME"
+
+check "GET /api/usuarios/me → 200" \
+  GET "$BASE/api/usuarios/me" \
+  -H "Authorization: Bearer $TOKEN" 200
 
 check "GET /api/usuarios/1 → 200" \
   GET "$BASE/api/usuarios/1" \
@@ -216,9 +224,6 @@ section "5. Playlists"
 # ─────────────────────────────────────────────────────────────
 
 # Crear playlist
-CREATE_PL=$(fetch POST "$BASE/api/playlists" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"nombre":"Mi Playlist Test","descripcion":"Test","esPublica":true}')
 CREATE_PL_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
   -X POST \
   -H "Authorization: Bearer $TOKEN" \
@@ -231,6 +236,17 @@ if [[ "$CREATE_PL_STATUS" == "201" ]]; then
 else
   fail "POST /api/playlists" "201" "$CREATE_PL_STATUS"
 fi
+
+# Extraer el id_usuario del JWT (payload es el segundo segmento, base64url → base64 estándar)
+JWT_PAYLOAD=$(echo "$TOKEN" | cut -d'.' -f2 | tr '_-' '/+' | base64 -d 2>/dev/null)
+MY_USER_ID=$(echo "$JWT_PAYLOAD" | grep -o '"sub":"[0-9]*"' | grep -o '[0-9]*' | head -1)
+# Fallback: usar MY_USER_ID_FROM_ME si el JWT decode falló
+[[ -z "$MY_USER_ID" ]] && MY_USER_ID="$MY_USER_ID_FROM_ME"
+
+# Obtener el ID de la playlist más reciente del usuario (la que acabamos de crear)
+MY_PLAYLISTS=$(fetch GET "$BASE/api/playlists/usuario/$MY_USER_ID" -H "Authorization: Bearer $TOKEN")
+MY_PL_ID=$(json_get_num "$MY_PLAYLISTS" "idPlaylist")
+info "Playlist propia creada con id: $MY_PL_ID (usuario: $MY_USER_ID)"
 
 # Validación: nombre vacío
 check "POST /api/playlists sin nombre → 400" \
@@ -251,12 +267,49 @@ check "GET /api/playlists/99999 (no existe) → 404" \
   GET "$BASE/api/playlists/99999" \
   -H "Authorization: Bearer $TOKEN" 404
 
-# Agregar canción a playlist 1
-check "POST /api/playlists/1/canciones → 201" \
-  POST "$BASE/api/playlists/1/canciones" \
+# Agregar canción a la playlist propia (no a la ajena)
+check "POST /api/playlists/$MY_PL_ID/canciones → 201" \
+  POST "$BASE/api/playlists/$MY_PL_ID/canciones" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"idCancion":1}' \
   201
+
+# Editar playlist propia
+check "PUT /api/playlists/$MY_PL_ID (editar nombre) → 200" \
+  PUT "$BASE/api/playlists/$MY_PL_ID" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"nombre":"Playlist Editada QA","descripcion":"Test de edicion","esPublica":true}' \
+  200
+
+# Crear una playlist adicional para eliminarla (no la que ya usamos)
+DEL_PL_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+  -X POST \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"nombre":"Playlist Para Borrar","descripcion":"temporal","esPublica":false}' \
+  "$BASE/api/playlists")
+
+if [[ "$DEL_PL_STATUS" == "201" ]]; then
+  pass "POST /api/playlists (para borrar) → 201"
+  # Obtener id de la playlist más reciente (la recién creada)
+  ALL_PLS=$(fetch GET "$BASE/api/playlists/usuario/$MY_USER_ID" -H "Authorization: Bearer $TOKEN")
+  DEL_PL_ID=$(json_get_num "$ALL_PLS" "idPlaylist")
+  info "Playlist temporal a eliminar: $DEL_PL_ID"
+
+  # Eliminar
+  check "DELETE /api/playlists/$DEL_PL_ID → 200" \
+    DELETE "$BASE/api/playlists/$DEL_PL_ID" \
+    -H "Authorization: Bearer $TOKEN" \
+    200
+
+  # Verificar que ya no existe
+  check "GET /api/playlists/$DEL_PL_ID (tras DELETE) → 404" \
+    GET "$BASE/api/playlists/$DEL_PL_ID" \
+    -H "Authorization: Bearer $TOKEN" \
+    404
+else
+  fail "POST /api/playlists (para borrar)" "201" "$DEL_PL_STATUS"
+fi
 
 # ─────────────────────────────────────────────────────────────
 section "6. Reproducciones"
