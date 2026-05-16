@@ -5,11 +5,13 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.List;
 
 /**
  * JWT service — handles token generation and validation.
@@ -20,12 +22,15 @@ public class JwtService {
 
     private final SecretKey secretKey;
     private final long expirationMs;
+    private final JdbcTemplate jdbc;
 
     public JwtService(
             @Value("${jwt.secret}") String secret,
-            @Value("${jwt.expiration-ms}") long expirationMs) {
+            @Value("${jwt.expiration-ms}") long expirationMs,
+            JdbcTemplate jdbcTemplate) {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationMs = expirationMs;
+        this.jdbc = jdbcTemplate;
     }
 
     /**
@@ -65,6 +70,22 @@ public class JwtService {
      */
     public String getEmailFromToken(String token) {
         return parseClaims(token).get("email", String.class);
+    }
+
+    /**
+     * Verifica que el usuario exista en BD y tenga activo = true.
+     * Se ejecuta en cada request autenticado. Retorna false ante cualquier error.
+     */
+    public boolean isUserActive(String email) {
+        try {
+            List<Boolean> result = jdbc.query(
+                    "SELECT activo FROM usuario WHERE email = ?",
+                    (rs, rowNum) -> rs.getBoolean("activo"),
+                    email);
+            return !result.isEmpty() && result.get(0);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private Claims parseClaims(String token) {

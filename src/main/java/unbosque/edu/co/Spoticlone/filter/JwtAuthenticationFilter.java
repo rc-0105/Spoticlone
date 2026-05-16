@@ -42,8 +42,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // Allow /api/auth/* endpoints without authentication
-        if (path.startsWith("/api/auth")) {
+        // Allow CORS preflight and /api/auth/* without authentication
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod()) || path.startsWith("/api/auth")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -63,6 +63,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String email = jwtService.getEmailFromToken(token);
+
+        if (!jwtService.isUserActive(email)) {
+            sendUnauthorized(response, "Usuario inactivo o no encontrado");
+            return;
+        }
+
         request.setAttribute(USER_EMAIL_ATTRIBUTE, email);
 
         filterChain.doFilter(request, response);
