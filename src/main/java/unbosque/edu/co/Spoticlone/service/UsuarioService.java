@@ -26,6 +26,11 @@ public class UsuarioService {
         return usuarioRepository.findAll();
     }
 
+    public UsuarioResponse findByEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado"));
+    }
+
     public int findIdByEmail(String email) {
         return usuarioRepository.findByEmail(email)
                 .map(UsuarioResponse::getIdUsuario)

@@ -20,6 +20,13 @@ public class UsuarioController {
         this.usuarioService = usuarioService;
     }
 
+    /** GET /api/usuarios/me */
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UsuarioResponse>> getMe(HttpServletRequest request) {
+        String email = (String) request.getAttribute("userEmail");
+        return ResponseEntity.ok(ApiResponse.ok("Usuario obtenido", usuarioService.findByEmail(email)));
+    }
+
     /** GET /api/usuarios/{id} */
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<UsuarioResponse>> findById(@PathVariable int id) {

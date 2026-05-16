@@ -35,6 +35,7 @@ public class UsuarioRepository {
         Date fecha = rs.getDate("fecha_registro");
         if (fecha != null) u.setFechaRegistro(fecha.toLocalDate());
         u.setActivo(rs.getBoolean("activo"));
+        u.setRol(rs.getString("rol"));
         return u;
     };
 
@@ -50,7 +51,7 @@ public class UsuarioRepository {
                 cs.execute();
             }
         } catch (SQLException e) {
-            String msg = e.getMessage() != null ? e.getMessage() : "Error al registrar usuario";
+            String msg = extractSPMessage(e.getMessage()) != null ? extractSPMessage(e.getMessage()) : "Error al registrar usuario";
             if ("23505".equals(e.getSQLState()) || msg.toLowerCase().contains("ya exist")
                     || msg.toLowerCase().contains("ya est")
                     || msg.toLowerCase().contains("already") || msg.toLowerCase().contains("duplicado")) {
@@ -63,7 +64,7 @@ public class UsuarioRepository {
     /** Busca un usuario por ID. */
     public Optional<UsuarioResponse> findById(int idUsuario) {
         String sql = """
-                SELECT id_usuario, nombre, email, foto_perfil, fecha_registro, activo
+                SELECT id_usuario, nombre, email, foto_perfil, fecha_registro, activo, rol
                 FROM usuario
                 WHERE id_usuario = ?
                 """;
@@ -74,7 +75,7 @@ public class UsuarioRepository {
     /** Lista todos los usuarios. */
     public List<UsuarioResponse> findAll() {
         String sql = """
-                SELECT id_usuario, nombre, email, foto_perfil, fecha_registro, activo
+                SELECT id_usuario, nombre, email, foto_perfil, fecha_registro, activo, rol
                 FROM usuario
                 ORDER BY id_usuario
                 """;
@@ -84,7 +85,7 @@ public class UsuarioRepository {
     /** Busca un usuario por email (para login). */
     public Optional<UsuarioResponse> findByEmail(String email) {
         String sql = """
-                SELECT id_usuario, nombre, email, foto_perfil, fecha_registro, activo
+                SELECT id_usuario, nombre, email, foto_perfil, fecha_registro, activo, rol
                 FROM usuario
                 WHERE email = ?
                 """;
@@ -113,5 +114,16 @@ public class UsuarioRepository {
         String sql = "SELECT rol FROM usuario WHERE email = ?";
         List<String> result = jdbc.query(sql, (rs, rowNum) -> rs.getString("rol"), email);
         return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
+    }
+
+    private static String extractSPMessage(String raw) {
+        if (raw == null) return "Error en la operación";
+        String msg = raw.replaceFirst("^ERROR:\\s*", "");
+        msg = msg.replaceFirst("^\\S+ falló:\\s*", "");
+        int idx = msg.indexOf("\n  Where:");
+        if (idx < 0) idx = msg.indexOf("\n  Detail:");
+        if (idx < 0) idx = msg.indexOf("\n  Hint:");
+        if (idx > 0) msg = msg.substring(0, idx);
+        return msg.trim();
     }
 }

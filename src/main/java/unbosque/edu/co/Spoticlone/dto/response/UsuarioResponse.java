@@ -10,6 +10,7 @@ public class UsuarioResponse {
     private String fotoPerfil;
     private LocalDate fechaRegistro;
     private Boolean activo;
+    private String rol;
 
     public UsuarioResponse() {}
 
@@ -29,6 +30,7 @@ public class UsuarioResponse {
     public String getFotoPerfil() { return fotoPerfil; }
     public LocalDate getFechaRegistro() { return fechaRegistro; }
     public Boolean getActivo() { return activo; }
+    public String getRol() { return rol; }
 
     public void setIdUsuario(Integer idUsuario) { this.idUsuario = idUsuario; }
     public void setNombre(String nombre) { this.nombre = nombre; }
@@ -36,4 +38,5 @@ public class UsuarioResponse {
     public void setFotoPerfil(String fotoPerfil) { this.fotoPerfil = fotoPerfil; }
     public void setFechaRegistro(LocalDate fechaRegistro) { this.fechaRegistro = fechaRegistro; }
     public void setActivo(Boolean activo) { this.activo = activo; }
+    public void setRol(String rol) { this.rol = rol; }
 }
