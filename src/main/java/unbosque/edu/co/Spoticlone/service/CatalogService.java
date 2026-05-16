@@ -1,6 +1,7 @@
 package unbosque.edu.co.Spoticlone.service;
 
 import org.springframework.stereotype.Service;
+import unbosque.edu.co.Spoticlone.dto.response.AlbumDetalleResponse;
 import unbosque.edu.co.Spoticlone.dto.response.AlbumResponse;
 import unbosque.edu.co.Spoticlone.dto.response.ArtistaResponse;
 import unbosque.edu.co.Spoticlone.dto.response.CancionResponse;
@@ -23,6 +24,12 @@ public class CatalogService {
         return catalogRepository.findCanciones(genero, artista);
     }
 
+    public CancionResponse findCancionById(int idCancion) {
+        return catalogRepository.findCancionById(idCancion)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Canción con id " + idCancion + " no encontrada"));
+    }
+
     public List<CancionResponse> findCancionesByAlbum(int idAlbum) {
         return catalogRepository.findCancionesByAlbum(idAlbum);
     }
@@ -43,5 +50,11 @@ public class CatalogService {
 
     public List<AlbumResponse> findAlbumes() {
         return catalogRepository.findAlbumes();
+    }
+
+    public AlbumDetalleResponse findAlbumById(int id) {
+        AlbumDetalleResponse album = catalogRepository.findAlbumById(id);
+        album.setCanciones(catalogRepository.findCancionesByAlbum(id));
+        return album;
     }
 }

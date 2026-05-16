@@ -29,6 +29,12 @@ public class CatalogController {
         return ResponseEntity.ok(ApiResponse.ok(canciones));
     }
 
+    /** GET /api/catalog/canciones/{id} */
+    @GetMapping("/canciones/{id}")
+    public ResponseEntity<ApiResponse<CancionResponse>> getCancionById(@PathVariable int id) {
+        return ResponseEntity.ok(ApiResponse.ok(catalogService.findCancionById(id)));
+    }
+
     /** GET /api/catalog/artistas */
     @GetMapping("/artistas")
     public ResponseEntity<ApiResponse<List<ArtistaResponse>>> findArtistas() {
@@ -55,6 +61,12 @@ public class CatalogController {
     public ResponseEntity<ApiResponse<List<AlbumResponse>>> findAlbumes() {
         List<AlbumResponse> albumes = catalogService.findAlbumes();
         return ResponseEntity.ok(ApiResponse.ok(albumes));
+    }
+
+    /** GET /api/catalog/albumes/{id} */
+    @GetMapping("/albumes/{id}")
+    public ResponseEntity<ApiResponse<AlbumDetalleResponse>> getAlbumById(@PathVariable int id) {
+        return ResponseEntity.ok(ApiResponse.ok("Álbum obtenido", catalogService.findAlbumById(id)));
     }
 
     /** GET /api/catalog/albumes/{id}/canciones */

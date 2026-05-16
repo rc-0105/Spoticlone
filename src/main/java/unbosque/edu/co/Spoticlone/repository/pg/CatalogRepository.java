@@ -3,6 +3,7 @@ package unbosque.edu.co.Spoticlone.repository.pg;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import unbosque.edu.co.Spoticlone.dto.response.AlbumDetalleResponse;
 import unbosque.edu.co.Spoticlone.dto.response.AlbumResponse;
 import unbosque.edu.co.Spoticlone.dto.response.ArtistaResponse;
 import unbosque.edu.co.Spoticlone.dto.response.CancionResponse;
@@ -163,5 +164,31 @@ public class CatalogRepository {
                 ORDER BY al.fecha_lanzamiento DESC
                 """;
         return jdbc.query(sql, albumMapper);
+    }
+
+    public AlbumDetalleResponse findAlbumById(int idAlbum) {
+        String sql = """
+                SELECT al.id_album, al.titulo AS titulo_album, al.tipo,
+                       al.fecha_lanzamiento, al.portada_url,
+                       a.id_artista, a.nom_artistico
+                FROM album al
+                JOIN artista a ON al.id_artista = a.id_artista
+                WHERE al.id_album = ?
+                """;
+        RowMapper<AlbumDetalleResponse> detalleMapper = (rs, rowNum) -> {
+            AlbumDetalleResponse al = new AlbumDetalleResponse();
+            al.setIdAlbum(rs.getInt("id_album"));
+            al.setTitulo(rs.getString("titulo_album"));
+            al.setTipo(rs.getString("tipo"));
+            Date fecha = rs.getDate("fecha_lanzamiento");
+            if (fecha != null) al.setFechaLanzamiento(fecha.toLocalDate());
+            al.setPortadaUrl(rs.getString("portada_url"));
+            al.setIdArtista(rs.getInt("id_artista"));
+            al.setNomArtista(rs.getString("nom_artistico"));
+            return al;
+        };
+        List<AlbumDetalleResponse> result = jdbc.query(sql, detalleMapper, idAlbum);
+        if (result.isEmpty()) throw new java.util.NoSuchElementException("Álbum con id " + idAlbum + " no encontrado");
+        return result.get(0);
     }
 }
