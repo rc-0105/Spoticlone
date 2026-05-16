@@ -67,7 +67,23 @@ public class PlaylistRepository {
                 cs.execute();
             }
         } catch (SQLException e) {
-            String msg = e.getMessage() != null ? e.getMessage() : "Error al crear playlist";
+            String msg = extractSPMessage(e.getMessage()) != null ? extractSPMessage(e.getMessage()) : "Error al crear playlist";
+            throw new BusinessException(msg, 400);
+        }
+    }
+
+    /** Elimina una canción de una playlist via sp_eliminar_cancion_playlist. */
+    public void eliminarCancion(int idPlaylist, int idCancion) {
+        String sql = "CALL sp_eliminar_cancion_playlist(?, ?)";
+        try (Connection conn = dataSource.getConnection()) {
+            conn.setAutoCommit(true);
+            try (CallableStatement cs = conn.prepareCall(sql)) {
+                cs.setInt(1, idPlaylist);
+                cs.setInt(2, idCancion);
+                cs.execute();
+            }
+        } catch (SQLException e) {
+            String msg = extractSPMessage(e.getMessage()) != null ? extractSPMessage(e.getMessage()) : "Error al eliminar canción";
             throw new BusinessException(msg, 400);
         }
     }
@@ -83,7 +99,7 @@ public class PlaylistRepository {
                 cs.execute();
             }
         } catch (SQLException e) {
-            String msg = e.getMessage() != null ? e.getMessage() : "Error al agregar canción";
+            String msg = extractSPMessage(e.getMessage()) != null ? extractSPMessage(e.getMessage()) : "Error al agregar canción";
             if ("23505".equals(e.getSQLState()) || (msg.toLowerCase().contains("ya")
                     && msg.toLowerCase().contains("playlist"))) {
                 throw new BusinessException(msg, 409);
@@ -104,11 +120,46 @@ public class PlaylistRepository {
             cs.execute();
             return cs.getInt(1);
         } catch (SQLException e) {
-            throw new BusinessException(e.getMessage());
+            throw new BusinessException(extractSPMessage(e.getMessage()));
         }
     }
 
+    private static String extractSPMessage(String raw) {
+        if (raw == null) return "Error en la operación";
+        String msg = raw.replaceFirst("^ERROR:\\s*", "");
+        msg = msg.replaceFirst("^\\S+ falló:\\s*", "");
+        int idx = msg.indexOf("\n  Where:");
+        if (idx < 0) idx = msg.indexOf("\n  Detail:");
+        if (idx < 0) idx = msg.indexOf("\n  Hint:");
+        if (idx > 0) msg = msg.substring(0, idx);
+        return msg.trim();
+    }
+
+    /** Elimina todas las canciones de una playlist y luego la playlist. */
+    public void eliminarPlaylist(int idPlaylist) {
+        jdbc.update("DELETE FROM playlist_cancion WHERE id_playlist = ?", idPlaylist);
+        jdbc.update("DELETE FROM playlist WHERE id_playlist = ?", idPlaylist);
+    }
+
+    /** Actualiza nombre, descripción y visibilidad de una playlist. */
+    public PlaylistDetalleResponse actualizarPlaylist(int idPlaylist, String nombre, String descripcion, boolean esPublica) {
+        jdbc.update(
+                "UPDATE playlist SET nombre = ?, descripcion = ?, es_publica = ? WHERE id_playlist = ?",
+                nombre, descripcion, esPublica, idPlaylist
+        );
+        return findById(idPlaylist)
+                .orElseThrow(() -> new BusinessException("Playlist no encontrada tras actualizar", 404));
+    }
+
     // ─── Consultas SELECT ────────────────────────────────────────────────────
+
+    /** Retorna el id_usuario dueño de una playlist, o empty si no existe. */
+    public Optional<Integer> findIdUsuarioByPlaylist(int idPlaylist) {
+        String sql = "SELECT id_usuario FROM playlist WHERE id_playlist = ?";
+        List<Integer> result = jdbc.query(sql,
+                (rs, rowNum) -> rs.getInt("id_usuario"), idPlaylist);
+        return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
+    }
 
     /** Detalle completo de una playlist (sin canciones — se obtienen aparte). */
     public Optional<PlaylistDetalleResponse> findById(int idPlaylist) {

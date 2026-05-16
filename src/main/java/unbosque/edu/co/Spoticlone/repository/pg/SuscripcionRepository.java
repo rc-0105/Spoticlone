@@ -35,9 +35,20 @@ public class SuscripcionRepository {
                 cs.execute();
             }
         } catch (SQLException e) {
-            String msg = e.getMessage() != null ? e.getMessage() : "Error al cambiar suscripción";
+            String msg = extractSPMessage(e.getMessage()) != null ? extractSPMessage(e.getMessage()) : "Error al cambiar suscripción";
             throw new BusinessException(msg, 400);
         }
+    }
+
+    private static String extractSPMessage(String raw) {
+        if (raw == null) return "Error en la operación";
+        String msg = raw.replaceFirst("^ERROR:\\s*", "");
+        msg = msg.replaceFirst("^\\S+ falló:\\s*", "");
+        int idx = msg.indexOf("\n  Where:");
+        if (idx < 0) idx = msg.indexOf("\n  Detail:");
+        if (idx < 0) idx = msg.indexOf("\n  Hint:");
+        if (idx > 0) msg = msg.substring(0, idx);
+        return msg.trim();
     }
 
     /**
