@@ -24,6 +24,11 @@ public class CatalogService {
         return catalogRepository.findCanciones(genero, artista);
     }
 
+    public List<CancionResponse> searchCanciones(String q) {
+        if (q == null || q.isBlank()) return List.of();
+        return catalogRepository.searchCanciones(q.trim());
+    }
+
     public CancionResponse findCancionById(int idCancion) {
         return catalogRepository.findCancionById(idCancion)
                 .orElseThrow(() -> new NoSuchElementException(

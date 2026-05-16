@@ -17,6 +17,13 @@ public class CatalogController {
         this.catalogService = catalogService;
     }
 
+    /** GET /api/catalog/search?q=texto */
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<CancionResponse>>> search(
+            @RequestParam String q) {
+        return ResponseEntity.ok(ApiResponse.ok(catalogService.searchCanciones(q)));
+    }
+
     /**
      * GET /api/catalog/canciones
      * GET /api/catalog/canciones?genero=Rock&artista=The%20Cure

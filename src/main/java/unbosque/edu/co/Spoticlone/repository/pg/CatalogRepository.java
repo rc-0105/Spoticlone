@@ -112,6 +112,18 @@ public class CatalogRepository {
         return jdbc.query(sql, cancionMapper, idAlbum);
     }
 
+    /** Búsqueda full-text por título de canción, artista o álbum. */
+    public List<CancionResponse> searchCanciones(String q) {
+        String pattern = "%" + q + "%";
+        String sql = BASE_CANCION_SQL + """
+                WHERE c.titulo ILIKE ?
+                   OR a.nom_artistico ILIKE ?
+                   OR al.titulo ILIKE ?
+                ORDER BY c.titulo
+                """;
+        return jdbc.query(sql, cancionMapper, pattern, pattern, pattern);
+    }
+
     /** Detalle de una canción por ID — usado para enriquecer reproducciones en Mongo. */
     public Optional<CancionResponse> findCancionById(int idCancion) {
         String sql = BASE_CANCION_SQL + " WHERE c.id_cancion = ?";
