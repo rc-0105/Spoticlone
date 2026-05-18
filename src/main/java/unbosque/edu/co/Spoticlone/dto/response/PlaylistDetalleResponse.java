@@ -6,6 +6,7 @@ import java.util.List;
 public class PlaylistDetalleResponse {
 
     private Integer idPlaylist;
+    private Integer idUsuario;
     private String nombre;
     private String descripcion;
     private Boolean esPublica;
@@ -18,6 +19,7 @@ public class PlaylistDetalleResponse {
     public PlaylistDetalleResponse() {}
 
     public Integer getIdPlaylist() { return idPlaylist; }
+    public Integer getIdUsuario() { return idUsuario; }
     public String getNombre() { return nombre; }
     public String getDescripcion() { return descripcion; }
     public Boolean getEsPublica() { return esPublica; }
@@ -28,6 +30,7 @@ public class PlaylistDetalleResponse {
     public List<CancionResponse> getCanciones() { return canciones; }
 
     public void setIdPlaylist(Integer idPlaylist) { this.idPlaylist = idPlaylist; }
+    public void setIdUsuario(Integer idUsuario) { this.idUsuario = idUsuario; }
     public void setNombre(String nombre) { this.nombre = nombre; }
     public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
     public void setEsPublica(Boolean esPublica) { this.esPublica = esPublica; }

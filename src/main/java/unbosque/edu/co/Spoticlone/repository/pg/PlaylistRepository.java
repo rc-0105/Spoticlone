@@ -46,8 +46,10 @@ public class PlaylistRepository {
         c.setDuracionSeg(rs.getInt("duracion_seg"));
         c.setUrlPreview(rs.getString("url_preview"));
         c.setNumeroPista(rs.getInt("numero_pista"));
+        c.setIdArtista(rs.getInt("id_artista"));
         c.setNomArtista(rs.getString("nom_artistico"));
         c.setNombreGenero(rs.getString("nombre_genero"));
+        c.setTituloAlbum(rs.getString("titulo_album"));
         c.setPosicion(rs.getInt("posicion"));
         return c;
     };
@@ -164,7 +166,7 @@ public class PlaylistRepository {
     /** Detalle completo de una playlist (sin canciones — se obtienen aparte). */
     public Optional<PlaylistDetalleResponse> findById(int idPlaylist) {
         String sql = """
-                SELECT p.id_playlist, p.nombre, p.descripcion, p.es_publica,
+                SELECT p.id_playlist, p.id_usuario, p.nombre, p.descripcion, p.es_publica,
                        p.fecha_creacion, p.total_canciones, u.nombre AS nombre_usuario
                 FROM playlist p
                 JOIN usuario u ON p.id_usuario = u.id_usuario
@@ -173,6 +175,7 @@ public class PlaylistRepository {
         List<PlaylistDetalleResponse> result = jdbc.query(sql, (rs, rowNum) -> {
             PlaylistDetalleResponse pd = new PlaylistDetalleResponse();
             pd.setIdPlaylist(rs.getInt("id_playlist"));
+            pd.setIdUsuario(rs.getInt("id_usuario"));
             pd.setNombre(rs.getString("nombre"));
             pd.setDescripcion(rs.getString("descripcion"));
             pd.setEsPublica(rs.getBoolean("es_publica"));
@@ -189,7 +192,8 @@ public class PlaylistRepository {
     public List<CancionResponse> findCancionesDePlaylist(int idPlaylist) {
         String sql = """
                 SELECT c.id_cancion, c.titulo, c.duracion_seg, c.url_preview,
-                       c.numero_pista, a.nom_artistico, g.nombre AS nombre_genero,
+                       c.numero_pista, a.id_artista, a.nom_artistico,
+                       g.nombre AS nombre_genero, al.titulo AS titulo_album,
                        pc.posicion
                 FROM playlist_cancion pc
                 JOIN cancion c ON pc.id_cancion = c.id_cancion
